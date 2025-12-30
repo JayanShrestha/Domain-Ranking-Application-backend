@@ -11,7 +11,7 @@ import { ConfigModule } from '@nestjs/config';
      ConfigModule.forRoot({
       isGlobal: true,
     }),
-    SequelizeModule.forRoot({
+    SequelizeModule.forRoot({// credentials for connecting to NEON
      dialect: 'postgres',
      host: process.env.DB_HOST,
      port:5432,

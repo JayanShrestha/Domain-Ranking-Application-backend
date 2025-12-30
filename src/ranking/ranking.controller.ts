@@ -11,8 +11,14 @@ async fetchAndStoreTrancoRanking(
 ){
   return this.rankingService.fetchAndStoreTrancoRanking(domain);
 }
+@Get('tranco/multi')
+async fetchMultipleTrancoRanks(
+  @Query('domains') domains:string,
+){
+  const list = domains.split(',');
+  return this.rankingService.fetchAndStoreMultipleDomains(list);
 
-
+}
   @Get()
   findAll() {
     return this.rankingService.findAll();
