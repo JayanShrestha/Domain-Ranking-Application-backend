@@ -32,8 +32,11 @@ npm install
 <p>Create a .env file in the root directory:</p>
 
 ```
-DATABASE_URL=your-neon-postgres-url
-TRANCOLIST_API=https://tranco-list.eu/api/ranks/domain
+DB_USER=neon_username
+DB_PASS=neon_password
+DB_HOST=neon_host
+DB_NAME=neon_db
+DB_PORT=neon_port
 ```
 <p>Make sure your Neon database is set up and accessible.</p>
 
