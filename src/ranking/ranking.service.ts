@@ -56,6 +56,28 @@ async fetchAndStoreTrancoRanking(domain:string){
     savedRecords,
   };
 }
+//fetching multiple domains rank
+async fetchAndStoreMultipleDomains(domains: string[]){
+  const results: Ranking []=[];
+  for (const domain of domains){
+    const data = await this.fetchTrancoRanking(domain);
+    for(const entry of data.ranks){
+    const saved = await this.saveRankingToDB(
+      domain,
+      entry.rank,
+      entry.date
+    );
+    results.push(saved);
+  }
+  }
+  return {
+    success:true,
+    count:domains.length,
+    results,
+  };
+
+ 
+}
 
   async findAll() {
     return this.rankingModel.findAll();
