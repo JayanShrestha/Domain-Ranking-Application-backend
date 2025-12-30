@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Ranking } from './entities/ranking.entity';
 import { RankingService } from './ranking.service';
 import { RankingController } from './ranking.controller';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Ranking])],
+  imports: [
+    HttpModule,
+    SequelizeModule.forFeature([Ranking])],
   controllers: [RankingController],
   providers: [RankingService],
 })
