@@ -35,10 +35,33 @@ async fetchAndStoreTrancoRanking(domain:string){
   // getting data from API
   console.log("Fetching Tranco rank for:", domain);
   
+  // check neon for latest record or checking the freshness of the data
+  const latest = await this.getLatestRecord(domain);
+  if(latest && this.isFresh(latest.checkedAt)){
+    console.log("Serving from cache:",domain);
+    const cachedData = await this.rankingModel.findAll({
+      where:{domain},
+      order:[['checkedAt','DESC']],
+    });
+    return{
+      success:true,
+      cached:true,
+      count:cachedData.length,
+      records:cachedData,
+    };
+
+  }
+  console.log("Cache has expired or empty. Fetching fresh data");
+
+  //New or fresh data fetched from tranco
   const data = await this.fetchTrancoRanking(domain);
   console.log("Tranco API response:", data);
 
-  //const {rank} = await this.fetchTrancoRanking(domain);
+  if(!data || !data.ranks || data.ranks.length ===0){
+    throw new Error (`No tranco ranking found for domain: ${domain}`);
+  }// throws error if the data ranks is empty from tranco
+await this.deleteOldRecords(domain);
+
   // saving to neon via sequelize
   const savedRecords: Ranking[] = [];//changing the type to ranking so ranking type data can be pushed.
   for(const entry of data.ranks){
@@ -79,6 +102,28 @@ async fetchAndStoreMultipleDomains(domains: string[]){
  
 }
 
+// helper to check cache freshness
+
+private isFresh(date:Date):boolean{
+  const now = new Date();
+  const diff = now.getTime()-date.getTime();
+  const hours = diff/(1000*60*60)
+  return hours<24;
+}
+//getting the latest records from Neon
+async getLatestRecord(domain:string){
+  return this.rankingModel.findOne({
+    where:{domain},
+    order:[['checkedAt', 'DESC']],
+  });
+}
+
+//delete the old records
+async deleteOldRecords(domain:string){
+  await this.rankingModel.destroy({
+    where: {domain},
+  })
+}
   async findAll() {
     return this.rankingModel.findAll();
   }
