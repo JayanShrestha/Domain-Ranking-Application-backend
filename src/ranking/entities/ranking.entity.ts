@@ -1,22 +1,23 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { CreationOptional } from 'sequelize';
 
 @Table
-export class Ranking extends Model {
+export class Ranking extends Model<Ranking> {
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  domain: string;
+  declare domain: string;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  rank: number;
+  declare rank: number;
 
   @Column({
     type: DataType.DATE,
-    defaultValue: DataType.NOW,
+    allowNull: false,
   })
-  checkedAt: Date;
+   checkedAt!: Date;
 }
