@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/sequelize';
 import { Ranking } from './entities/ranking.entity';
 import { firstValueFrom } from 'rxjs';
+import { RankingModule } from './ranking.module';
 
 @Injectable()
 export class RankingService {
@@ -51,8 +52,9 @@ async fetchAndStoreTrancoRanking(domain:string){
     };
 
   }
+  else{
   console.log("Cache has expired or empty. Fetching fresh data");
-
+  await this.deleteOldRecords(domain);
   //New or fresh data fetched from tranco
   const data = await this.fetchTrancoRanking(domain);
   console.log("Tranco API response:", data);
@@ -60,7 +62,7 @@ async fetchAndStoreTrancoRanking(domain:string){
   if(!data || !data.ranks || data.ranks.length ===0){
     throw new Error (`No tranco ranking found for domain: ${domain}`);
   }// throws error if the data ranks is empty from tranco
-await this.deleteOldRecords(domain);
+
 
   // saving to neon via sequelize
   const savedRecords: Ranking[] = [];//changing the type to ranking so ranking type data can be pushed.
@@ -79,27 +81,56 @@ await this.deleteOldRecords(domain);
     savedRecords,
   };
 }
+}
 //fetching multiple domains rank
+
 async fetchAndStoreMultipleDomains(domains: string[]){
-  const results: Ranking []=[];
-  for (const domain of domains){
+  console.log("Fetching Tranco rank for:", domains);
+  const results: RankingModule []=[];// as this has cached object
+  for (const domain of domains){//for each domain name
+    const latest = await this.getLatestRecord(domain);// checking if the data exists in the database
+    console.log(latest);
+    if(latest && this.isFresh(latest.checkedAt)){
+     console.log("Serving from cache:",domain);
+    const cachedData = await this.rankingModel.findAll({
+      where:{domain},
+      order:[['checkedAt','DESC']],
+    });
+    results.push({//[pushing cached data to results]
+    domain,
+    cached:true,
+    count: cachedData.length,
+    records:cachedData,
+    });
+    continue;//continues through the loop again for checking cache.
+    }else{
+      console.log("Deleting old data; and fetching from tranco:");
+    await this.deleteOldRecords(domain);
     const data = await this.fetchTrancoRanking(domain);
+    //array for new fetched data
+    const savedRecords: Ranking[]=[];
     for(const entry of data.ranks){
     const saved = await this.saveRankingToDB(
       domain,
       entry.rank,
       entry.date
     );
-    results.push(saved);
+    savedRecords.push(saved);
   }
+  results.push({
+    domain,
+    cached:false,
+    count:savedRecords.length,
+    records:savedRecords,
+  });
+  continue;// continues through the loop
+  } 
   }
   return {
     success:true,
-    count:domains.length,
     results,
   };
 
- 
 }
 
 // helper to check cache freshness
@@ -108,6 +139,7 @@ private isFresh(date:Date):boolean{
   const now = new Date();
   const diff = now.getTime()-date.getTime();
   const hours = diff/(1000*60*60)
+  console.log(hours);
   return hours<24;
 }
 //getting the latest records from Neon
