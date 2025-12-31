@@ -67,7 +67,7 @@ npm run start:prod
 
 ```
 GET /ranking/tranco?domain=example.com
-(http://localhost:3000/ranking/tranco?domains=google.com)
+(http://localhost:3000/ranking/tranco?domain=google.com)
 ```
 
 
