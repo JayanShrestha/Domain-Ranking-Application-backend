@@ -32,13 +32,14 @@ async saveRankingToDB(domain:string,rank:number, date:string){
   return record;
 }
 
+///fetching for single domain ranks
 async fetchAndStoreTrancoRanking(domain:string){
   // getting data from API
   console.log("Fetching Tranco rank for:", domain);
   
   // check neon for latest record or checking the freshness of the data
   const latest = await this.getLatestRecord(domain);
-  if(latest && this.isFresh(latest.checkedAt)){
+  if(latest && this.isFresh(latest.updatedAt)){// checking is the updated dates are under 24 hours
     console.log("Serving from cache:",domain);
     const cachedData = await this.rankingModel.findAll({
       where:{domain},
@@ -90,7 +91,7 @@ async fetchAndStoreMultipleDomains(domains: string[]){
   for (const domain of domains){//for each domain name
     const latest = await this.getLatestRecord(domain);// checking if the data exists in the database
     console.log(latest);
-    if(latest && this.isFresh(latest.checkedAt)){
+    if(latest && this.isFresh(latest.updatedAt)){
      console.log("Serving from cache:",domain);
     const cachedData = await this.rankingModel.findAll({
       where:{domain},
