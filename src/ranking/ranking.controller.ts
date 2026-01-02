@@ -18,13 +18,13 @@ export class RankingController {
 async fetchAndStoreTrancoRanking(
   @Query('domain') domain: string,
 ){
-  return this.rankingService.fetchAndStoreTrancoRanking(domain);
+  return this.rankingService.fetchAndStoreTrancoRanking(domain.toLocaleLowerCase());//converts the domain names to lowercase
 }
 @Get('tranco/multi')
 async fetchMultipleTrancoRanks(
   @Query('domains') domains:string,
 ){
-  const list = domains.split(',').map(domain=>domain.trim());// splits the domains name into array and remove white spaces
+  const list = domains.split(',').map(domain=>domain.trim().toLocaleLowerCase());// splits the domains name into array and remove white spaces
   return this.rankingService.fetchAndStoreMultipleDomains(list);// returns the list 
 
 }
