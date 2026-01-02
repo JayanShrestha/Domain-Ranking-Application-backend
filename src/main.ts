@@ -8,6 +8,8 @@ async function bootstrap() {
    // Credentials:true,
  // })
  const app = await NestFactory.create(AppModule);
+
+ //vue developer server specific
   app.enableCors({
     origin: '*', // or restrict to your Cloudflare Pages domain
   });
