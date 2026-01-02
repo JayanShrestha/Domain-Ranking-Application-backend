@@ -7,7 +7,10 @@ async function bootstrap() {
     //origin:'http://localhost:5173', // vue dev server
    // Credentials:true,
  // })
-  const app = await NestFactory.create(AppModule);
+ const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: '*', // or restrict to your Cloudflare Pages domain
+  });
   await app.listen(process.env.PORT || 3000);
 
 }
