@@ -80,7 +80,7 @@ async fetchAndStoreTrancoRanking(domain:string){
   return {
     success:true,
     count:savedRecords.length,
-    savedRecords,
+    records:savedRecords,
   };
 }
 }
