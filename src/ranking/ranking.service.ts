@@ -62,6 +62,7 @@ async fetchAndStoreTrancoRanking(domain:string){
 
   if(!data || !data.ranks || data.ranks.length ===0){
     throw new Error (`No tranco ranking found for domain: ${domain}`);
+    
   }// throws error if the data ranks is empty from tranco
 
 
@@ -90,7 +91,6 @@ async fetchAndStoreMultipleDomains(domains: string[]){
   const results: RankingModule []=[];// as this has cached object
   for (const domain of domains){//for each domain name
     const latest = await this.getLatestRecord(domain);// checking if the data exists in the database
-    console.log(latest);
     if(latest && this.isFresh(latest.updatedAt)){
      console.log("Serving from cache:",domain);
     const cachedData = await this.rankingModel.findAll({

@@ -15,7 +15,7 @@ async fetchAndStoreTrancoRanking(
 async fetchMultipleTrancoRanks(
   @Query('domains') domains:string,
 ){
-  const list = domains.split(',');// splits the domains name into array
+  const list = domains.split(',').map(domain=>domain.trim());// splits the domains name into array and remove white spaces
   return this.rankingService.fetchAndStoreMultipleDomains(list);// returns the list 
 
 }
