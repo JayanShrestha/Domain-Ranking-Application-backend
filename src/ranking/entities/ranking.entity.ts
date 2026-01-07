@@ -1,5 +1,4 @@
 import { Table, Column, Model, DataType } from 'sequelize-typescript';
-import { CreationOptional } from 'sequelize';
 
 @Table
 export class Ranking extends Model<Ranking> {
