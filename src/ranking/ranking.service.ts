@@ -157,7 +157,4 @@ async deleteOldRecords(domain:string){
     where: {domain},
   })
 }
-  async findAll() {
-    return this.rankingModel.findAll();
-  }
 }
