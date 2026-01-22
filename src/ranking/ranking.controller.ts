@@ -1,7 +1,7 @@
 import { Controller, Get, Body, Query } from '@nestjs/common';
 import { RankingService } from './ranking.service';
 
-@Controller()
+@Controller('')
 export class AppController {
   @Get()
   getRoot() {

@@ -6,9 +6,7 @@ import { RankingService } from './ranking.service';
 import { RankingController } from './ranking.controller';
 
 @Module({
-  imports: [
-    HttpModule,
-    SequelizeModule.forFeature([Ranking])],
+  imports: [HttpModule, SequelizeModule.forFeature([Ranking])],
   controllers: [RankingController],
   providers: [RankingService],
 })
