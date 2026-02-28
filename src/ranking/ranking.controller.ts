@@ -1,7 +1,7 @@
 import { Controller, Get, Body, Query } from '@nestjs/common';
 import { RankingService } from './ranking.service';
 
-@Controller('')
+@Controller('/')
 export class AppController {
   @Get()
   getRoot() {
@@ -13,6 +13,10 @@ export class AppController {
 export class RankingController {
   constructor(private readonly rankingService: RankingService) {}
 
+  @Get('/')
+  getRoot() {
+    return { status: 'ok', message: 'Backend is running' };
+  }
   @Get('tranco')
   async fetchAndStoreTrancoRanking(@Query('domain') domain: string) {
     return this.rankingService.fetchAndStoreTrancoRanking(
