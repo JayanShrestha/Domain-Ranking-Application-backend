@@ -1,14 +1,6 @@
 import { Controller, Get, Body, Query } from '@nestjs/common';
 import { RankingService } from './ranking.service';
 
-@Controller('/')
-export class AppController {
-  @Get()
-  getRoot() {
-    return { status: 'OK', message: 'Backend is running' };
-  }
-}
-
 @Controller('ranking')
 export class RankingController {
   constructor(private readonly rankingService: RankingService) {}
