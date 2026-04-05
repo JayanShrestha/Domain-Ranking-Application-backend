@@ -3,7 +3,6 @@ import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/sequelize';
 import { Ranking } from './entities/ranking.entity';
 import { firstValueFrom } from 'rxjs';
-import { RankingModule } from './ranking.module';
 
 interface Tranco {
   domain: string;
@@ -90,51 +89,27 @@ export class RankingService {
 
   async fetchAndStoreMultipleDomains(domains: string[]) {
     console.log('Fetching Tranco rank for:', domains);
-    const results: RankingModule[] = []; // as this has cached object
-    for (const domain of domains) {
-      //for each domain name
-      const latest = await this.getLatestRecord(domain); // checking if the data exists in the database
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      if (latest && this.isFresh(latest.updatedAt)) {
-        console.log('Serving from cache:', domain);
-        const cachedData = await this.rankingModel.findAll({
-          where: { domain },
-          order: [['checkedAt', 'DESC']],
-        });
-        results.push({
-          //[pushing cached data to results]
-          domain,
-          cached: true,
-          count: cachedData.length,
-          records: cachedData,
-        });
-        continue; //continues through the loop again for checking cache.
-      } else {
-        console.log('Deleting old data; and fetching from tranco:');
-        await this.deleteOldRecords(domain);
-        const data = await this.fetchTrancoRanking(domain);
-        //array for new fetched data
-        const savedRecords: Ranking[] = [];
-        for (const entry of data.ranks) {
-          const saved = await this.saveRankingToDB(
-            domain,
-            entry.rank,
-            entry.date,
-          );
-          savedRecords.push(saved);
-        }
-        results.push({
-          domain,
+    const tasks = domains.map(async (domain) => {
+      try {
+        return await this.fetchAndStoreTrancoRanking(domain);
+      } catch (err) {
+        console.error(`Error processing ${domain}:`, err);
+        return {
+          domain: domain,
           cached: false,
-          count: savedRecords.length,
-          records: savedRecords,
-        });
-        continue; // continues through the loop
+          count: 0,
+          records: [],
+          erro: true,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          message: err,
+        };
       }
-    }
+    });
+    const results = await Promise.all(tasks);
+
     return {
       success: true,
-      results,
+      results: results,
     };
   }
 
