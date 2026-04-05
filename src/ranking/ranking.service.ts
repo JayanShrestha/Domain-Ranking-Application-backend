@@ -99,9 +99,9 @@ export class RankingService {
           cached: false,
           count: 0,
           records: [],
-          erro: true,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          message: err,
+          error: true,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          message: err.message,
         };
       }
     });

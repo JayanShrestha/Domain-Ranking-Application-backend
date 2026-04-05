@@ -18,5 +18,5 @@ export class Ranking extends Model<Ranking> {
     type: DataType.DATE,
     allowNull: false,
   })
-   declare checkedAt: Date;
+  declare checkedAt: Date;
 }
