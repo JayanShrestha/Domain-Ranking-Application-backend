@@ -9,11 +9,13 @@ async function bootstrap() {
   // })
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    origin: 'https://domainranking.jayanshrestha.com',
-    credentials: true,
+ app.enableCors({
+    origin: '*',
+    methods: 'GET,POST,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
   });
-  await app.listen(process.env.PORT || 3000);
+
+  await app.listen(process.env.PORT || 3000, '0.0.0.0');
 }
-void bootstrap();
-console.log('ENV TEST:', process.env.PORT);
+bootstrap();
+
