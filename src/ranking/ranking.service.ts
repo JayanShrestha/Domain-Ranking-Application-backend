@@ -95,13 +95,12 @@ export class RankingService {
       } catch (err) {
         console.error(`Error processing ${domain}:`, err);
         return {
-          domain: domain,
+          domain,
           cached: false,
           count: 0,
           records: [],
           error: true,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-          message: err.message,
+          message: err instanceof Error ? err.message : String(err),
         };
       }
     });
@@ -109,7 +108,7 @@ export class RankingService {
 
     return {
       success: true,
-      results: results,
+      results,
     };
   }
 
