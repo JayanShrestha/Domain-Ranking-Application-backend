@@ -20,10 +20,21 @@ export class RankingService {
 
   // fetching data from tranco
   async fetchTrancoRanking(domain: string): Promise<Tranco> {
-    const url = `https://tranco-list.eu/api/ranks/domain/${domain}`;
-    const response = await firstValueFrom(this.httpService.get(url));
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return response.data; // return { domain, ranks:[....]}
+    try {
+      const url = `https://tranco-list.eu/api/ranks/domain/${domain}`;
+      const response = await firstValueFrom(this.httpService.get(url));
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return response.data; // return { domain, ranks:[....]}
+    } catch (error) {
+      // Log error for diagnostics
+      console.error('Failed to fetch Tranco ranking:', error);
+      // Throw application-specific error
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Failed to fetch Tranco ranking for domain ${domain}: ${errorMessage}`,
+      );
+    }
   }
   //function to save data into Neon
   async saveRankingToDB(domain: string, rank: number, date: string) {
