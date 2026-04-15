@@ -129,7 +129,7 @@ export class RankingService {
 
     return {
       success: true,
-      safeResults,
+      results: safeResults,
     };
   }
 
