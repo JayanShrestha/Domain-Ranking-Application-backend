@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/sequelize';
 import { Ranking } from './entities/ranking.entity';
-import { firstValueFrom } from 'rxjs';
+import { RateLimiterQueue } from './limiter/rateLimiter';
+import { coalesce } from './limiter/singleFlight';
 
 interface Tranco {
   domain: string;
@@ -17,24 +18,22 @@ export class RankingService {
     private rankingModel: typeof Ranking,
     private readonly httpService: HttpService,
   ) {}
+  private trancoLimiter = new RateLimiterQueue(1000); // 1 req/sec
 
+  private async callTranco(domain: string): Promise<Tranco> {
+    return this.trancoLimiter.enqueue<Tranco>(() =>
+    // eslint-disable-next-line prettier/prettier
+    this.httpService.axiosRef.get(
+      // eslint-disable-next-line prettier/prettier
+      `https://tranco-list.eu/api/ranks/domain/${domain}`
+        )
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        .then((res) => res.data),
+    );
+  }
   // fetching data from tranco
   async fetchTrancoRanking(domain: string): Promise<Tranco> {
-    try {
-      const url = `https://tranco-list.eu/api/ranks/domain/${domain}`;
-      const response = await firstValueFrom(this.httpService.get(url));
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return response.data; // return { domain, ranks:[....]}
-    } catch (error) {
-      // Log error for diagnostics
-      console.error('Failed to fetch Tranco ranking:', error);
-      // Throw application-specific error
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `Failed to fetch Tranco ranking for domain ${domain}: ${errorMessage}`,
-      );
-    }
+    return coalesce<Tranco>(domain, () => this.callTranco(domain));
   }
   //function to save data into Neon
   async saveRankingToDB(domain: string, rank: number, date: string) {
