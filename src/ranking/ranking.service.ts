@@ -91,6 +91,7 @@ export class RankingService {
 
       return {
         success: true,
+        cached: false,
         count: savedRecords.length,
         records: savedRecords,
       };
