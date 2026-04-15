@@ -74,7 +74,14 @@ export class RankingService {
       console.log('Tranco API response:', domain);
 
       if (!data || !data.ranks || data.ranks.length === 0) {
-        throw new Error(`No tranco ranking found for domain: ${domain}`);
+        return {
+          domain: domain,
+          cached: false,
+          count: 0,
+          records: [],
+          error: true,
+          message: 'Domain is not available in tranco',
+        };
       } // throws error if the data ranks is empty from tranco
 
       // saving to neon via sequelize
@@ -87,6 +94,7 @@ export class RankingService {
       });
 
       return {
+        domain: domain,
         success: true,
         cached: false,
         count: savedRecords.length,
