@@ -72,7 +72,7 @@ export class RankingService {
       await this.deleteOldRecords(domain);
       //New or fresh data fetched from tranco
       const data = await this.fetchTrancoRanking(domain);
-      console.log('Tranco API response:', data);
+      console.log('Tranco API response:', domain);
 
       if (!data || !data.ranks || data.ranks.length === 0) {
         throw new Error(`No tranco ranking found for domain: ${domain}`);
@@ -103,7 +103,15 @@ export class RankingService {
     console.log('Fetching Tranco rank for:', domains);
     const tasks = domains.map(async (domain) => {
       try {
-        return await this.fetchAndStoreTrancoRanking(domain);
+        const result = await this.fetchAndStoreTrancoRanking(domain);
+        //consistent return value for safe return to frontend
+        return {
+          domain,
+          cached: result.cached ?? false,
+          count: result.count ?? 0,
+          records: result.records ?? [],
+          error: false,
+        };
       } catch (err) {
         console.error(`Error processing ${domain}:`, err);
         return {
@@ -117,10 +125,11 @@ export class RankingService {
       }
     });
     const results = await Promise.all(tasks);
+    const safeResults = results.filter(Boolean);
 
     return {
       success: true,
-      results,
+      safeResults,
     };
   }
 
