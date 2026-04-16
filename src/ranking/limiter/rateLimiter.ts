@@ -9,7 +9,7 @@ export class RateLimiterQueue {
   private queue: Job<any>[] = [];
   private running = false;
 
-  constructor(private intervalMs = 1000) {} // 1 request per second
+  constructor(private intervalMs = 1500) {} // 1 request per 1.5 second
 
   enqueue<T>(fn: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {

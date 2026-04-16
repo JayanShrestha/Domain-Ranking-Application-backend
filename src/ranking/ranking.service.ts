@@ -18,18 +18,23 @@ export class RankingService {
     private rankingModel: typeof Ranking,
     private readonly httpService: HttpService,
   ) {}
-  private trancoLimiter = new RateLimiterQueue(1000); // 1 req/sec
+  private trancoLimiter = new RateLimiterQueue(1500); // 1 req/sec
 
   private async callTranco(domain: string): Promise<Tranco> {
-    return this.trancoLimiter.enqueue<Tranco>(() =>
+    try {
+      return this.trancoLimiter.enqueue<Tranco>(() =>
     // eslint-disable-next-line prettier/prettier
     this.httpService.axiosRef.get(
       // eslint-disable-next-line prettier/prettier
       `https://tranco-list.eu/api/ranks/domain/${domain}`
         )
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        .then((res) => res.data),
+          .then((res) => res.data),
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      throw new Error('Error from Tranco');
+    }
   }
   // fetching data from tranco
   async fetchTrancoRanking(domain: string): Promise<Tranco> {
@@ -142,14 +147,14 @@ export class RankingService {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const hours = diff / (1000 * 60 * 60);
-    console.log(hours);
+    console.log(`The hour difference is ${hours}`);
     return hours < 24;
   }
   //getting the latest records from Neon
   async getLatestRecord(domain: string) {
     return this.rankingModel.findOne({
       where: { domain },
-      order: [['checkedAt', 'DESC']],
+      order: [['updatedAt', 'DESC']],
     });
   }
 
