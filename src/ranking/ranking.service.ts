@@ -53,8 +53,6 @@ export class RankingService {
   ///fetching for single domain ranks
   async fetchAndStoreTrancoRanking(domain: string) {
     // getting data from API
-    console.log('Fetching Tranco rank for:', domain);
-
     // check neon for latest record or checking the freshness of the data
     const latest = await this.getLatestRecord(domain);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -75,34 +73,30 @@ export class RankingService {
       console.log('Cache has expired or empty. Fetching fresh data');
       await this.deleteOldRecords(domain);
       //New or fresh data fetched from tranco
+      console.log('Fetching Tranco rank for:', domain);
       const data = await this.fetchTrancoRanking(domain);
-      console.log('Tranco API response:', domain);
 
       if (!data || !data.ranks || data.ranks.length === 0) {
+        throw new Error('Error from Tranco');
+      } // throws error if the data ranks is empty from tranco
+      else {
+        for (const entry of data.ranks) {
+          await this.saveRankingToDB(domain, entry.rank, entry.date);
+        }
+        const savedRecords = await this.rankingModel.findAll({
+          where: { domain },
+          order: [['checkedAt', 'DESC']],
+        });
+
         return {
           domain: domain,
+          success: true,
           cached: false,
-          count: 0,
-          records: [],
-          error: true,
-          message: 'Domain is not available in tranco',
+          count: savedRecords.length,
+          records: savedRecords,
         };
-      } // throws error if the data ranks is empty from tranco
-
-      // saving to neon via sequelize
-      const savedRecords: Ranking[] = [];
-      for (const entry of data.ranks) {
-        const res = await this.saveRankingToDB(domain, entry.rank, entry.date);
-        savedRecords.push(res);
       }
-
-      return {
-        domain: domain,
-        success: true,
-        cached: false,
-        count: savedRecords.length,
-        records: savedRecords,
-      };
+      // saving to neon via sequelize
     }
   }
   //fetching multiple domains rank
