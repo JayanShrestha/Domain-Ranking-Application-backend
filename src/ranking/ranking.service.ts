@@ -80,20 +80,24 @@ export class RankingService {
         throw new Error('Error from Tranco');
       } // throws error if the data ranks is empty from tranco
       else {
+        const savedRecords: Ranking[] = [];
+
         for (const entry of data.ranks) {
-          await this.saveRankingToDB(domain, entry.rank, entry.date);
+          const record = await this.saveRankingToDB(
+            domain,
+            entry.rank,
+            entry.date,
+          );
+          savedRecords.push(record);
         }
-        const savedRecords = await this.rankingModel.findAll({
-          where: { domain },
-          order: [['checkedAt', 'DESC']],
-        });
 
         return {
-          domain: domain,
+          domain,
           success: true,
           cached: false,
           count: savedRecords.length,
           records: savedRecords,
+          data: savedRecords,
         };
       }
       // saving to neon via sequelize
