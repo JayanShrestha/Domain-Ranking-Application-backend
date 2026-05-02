@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Ranking } from './entities/ranking.entity';
 import { RateLimiterQueue } from './limiter/rateLimiter';
 import { coalesce } from './limiter/singleFlight';
+import { RankingModule } from './ranking.module';
 
 interface Tranco {
   domain: string;
@@ -51,8 +52,10 @@ export class RankingService {
   }
 
   ///fetching for single domain ranks
-  async fetchAndStoreTrancoRanking(domain: string) {
+   async fetchAndStoreTrancoRanking(domain: string) {
     // getting data from API
+    console.log('Fetching Tranco rank for:', domain);
+
     // check neon for latest record or checking the freshness of the data
     const latest = await this.getLatestRecord(domain);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -73,69 +76,82 @@ export class RankingService {
       console.log('Cache has expired or empty. Fetching fresh data');
       await this.deleteOldRecords(domain);
       //New or fresh data fetched from tranco
-      console.log('Fetching Tranco rank for:', domain);
       const data = await this.fetchTrancoRanking(domain);
+      console.log('Tranco API response:', data);
 
       if (!data || !data.ranks || data.ranks.length === 0) {
-        throw new Error('Error from Tranco');
+        throw new Error(`No tranco ranking found for domain: ${domain}`);
       } // throws error if the data ranks is empty from tranco
-      else {
-        for (const entry of data.ranks) {
-          await this.saveRankingToDB(domain, entry.rank, entry.date);
-        }
 
-        const fetchedData = await this.rankingModel.findAll({
-          where: { domain },
-          order: [['checkedAt', 'DESC']],
-        });
-
-        return {
-          domain,
-          success: true,
-          cached: false,
-          count: fetchedData.length,
-          records: fetchedData,
-        };
-      }
       // saving to neon via sequelize
+      const savedRecords: Ranking[] = []; //changing the type to ranking so ranking type data can be pushed.
+      for (const entry of data.ranks) {
+        const saved = await this.saveRankingToDB(
+          domain,
+          entry.rank,
+          entry.date,
+        );
+        savedRecords.push(saved);
+      }
+
+      return {
+        success: true,
+        count: savedRecords.length,
+        records: savedRecords,
+      };
     }
   }
   //fetching multiple domains rank
 
   async fetchAndStoreMultipleDomains(domains: string[]) {
     console.log('Fetching Tranco rank for:', domains);
-    const tasks = domains.map(async (domain) => {
-      try {
-        const result = await this.fetchAndStoreTrancoRanking(domain);
-        //consistent return value for safe return to frontend
-        return {
-          domain: domain,
-          cached: result.cached ?? false,
-          count: result.count ?? 0,
-          records: result.records ?? [],
-          error: false,
-        };
-      } catch (err) {
-        console.error(`Error processing ${domain}:`, err);
-        return {
-          domain: domain,
+    const results: RankingModule[] = []; // as this has cached object
+    for (const domain of domains) {
+      //for each domain name
+      const latest = await this.getLatestRecord(domain); // checking if the data exists in the database
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      if (latest && this.isFresh(latest.updatedAt)) {
+        console.log('Serving from cache:', domain);
+        const cachedData = await this.rankingModel.findAll({
+          where: { domain },
+          order: [['checkedAt', 'DESC']],
+        });
+        results.push({
+          //[pushing cached data to results]
+          domain,
+          cached: true,
+          count: cachedData.length,
+          records: cachedData,
+        });
+        continue; //continues through the loop again for checking cache.
+      } else {
+        console.log('Deleting old data; and fetching from tranco:');
+        await this.deleteOldRecords(domain);
+        const data = await this.fetchTrancoRanking(domain);
+        //array for new fetched data
+        const savedRecords: Ranking[] = [];
+        for (const entry of data.ranks) {
+          const saved = await this.saveRankingToDB(
+            domain,
+            entry.rank,
+            entry.date,
+          );
+          savedRecords.push(saved);
+        }
+        results.push({
+          domain,
           cached: false,
-          count: 0,
-          records: [],
-          error: true,
-          message: err instanceof Error ? err.message : String(err),
-        };
+          count: savedRecords.length,
+          records: savedRecords,
+        });
+        continue; // continues through the loop
       }
-    });
-    const results = await Promise.all(tasks);
-    const safeResults = results.filter(Boolean);
-
+    }
     return {
       success: true,
-      results: safeResults,
+      results,
     };
   }
-
   // helper to check cache freshness
 
   private isFresh(date: Date): boolean {
