@@ -52,7 +52,7 @@ export class RankingService {
   }
 
   ///fetching for single domain ranks
-   async fetchAndStoreTrancoRanking(domain: string) {
+  async fetchAndStoreTrancoRanking(domain: string) {
     // getting data from API
     console.log('Fetching Tranco rank for:', domain);
 
