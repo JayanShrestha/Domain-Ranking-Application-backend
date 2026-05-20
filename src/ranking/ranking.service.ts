@@ -94,6 +94,7 @@ export class RankingService {
     console.log('Saved records:', savedRecords);
     return {
       success: true,
+      cached: false,
       count: savedRecords.length,
       records: savedRecords,
     };
