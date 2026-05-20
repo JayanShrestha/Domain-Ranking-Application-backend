@@ -52,7 +52,7 @@ export class RankingService {
   }
 
   ///fetching for single domain ranks
-   async fetchAndStoreTrancoRanking(domain: string) {
+  async fetchAndStoreTrancoRanking(domain: string) {
     // getting data from API
     console.log('Fetching Tranco rank for:', domain);
 
@@ -93,12 +93,13 @@ export class RankingService {
         );
         savedRecords.push(saved);
       }
-
-      return {
-        success: true,
-        count: savedRecords.length,
-        records: savedRecords,
-      };
+      setTimeout(() => {
+        return {
+          success: true,
+          count: savedRecords.length,
+          records: savedRecords,
+        };
+      }, 5000);
     }
   }
   //fetching multiple domains rank
@@ -147,10 +148,12 @@ export class RankingService {
         continue; // continues through the loop
       }
     }
-    return {
-      success: true,
-      results,
-    };
+    setTimeout(() => {
+      return {
+        success: true,
+        results,
+      };
+    }, 5000);
   }
   // helper to check cache freshness
 
