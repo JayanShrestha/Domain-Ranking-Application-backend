@@ -93,13 +93,13 @@ export class RankingService {
         );
         savedRecords.push(saved);
       }
-      setTimeout(() => {
+      if (savedRecords.length >= 1) {
         return {
           success: true,
           count: savedRecords.length,
           records: savedRecords,
         };
-      }, 5000);
+      }
     }
   }
   //fetching multiple domains rank
@@ -148,12 +148,12 @@ export class RankingService {
         continue; // continues through the loop
       }
     }
-    setTimeout(() => {
+    if (results.length === domains.length) {
       return {
         success: true,
         results,
       };
-    }, 5000);
+    }
   }
   // helper to check cache freshness
 
