@@ -24,15 +24,15 @@ export class RankingService {
   private async callTranco(domain: string): Promise<Tranco> {
     try {
       return this.trancoLimiter.enqueue<Tranco>(() =>
-    // eslint-disable-next-line prettier/prettier
+        // eslint-disable-next-line prettier/prettier
     this.httpService.axiosRef.get(
-      // eslint-disable-next-line prettier/prettier
+            // eslint-disable-next-line prettier/prettier
       `https://tranco-list.eu/api/ranks/domain/${domain}`
-        )
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+          )
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           .then((res) => res.data),
-    );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       throw new Error('Error from Tranco');
     }
@@ -84,20 +84,18 @@ export class RankingService {
       } // throws error if the data ranks is empty from tranco
 
       // saving to neon via sequelize
-      const savedRecords: Ranking[] = []; //changing the type to ranking so ranking type data can be pushed.
       for (const entry of data.ranks) {
-        const saved = await this.saveRankingToDB(
-          domain,
-          entry.rank,
-          entry.date,
-        );
-        savedRecords.push(saved);
+        await this.saveRankingToDB(domain, entry.rank, entry.date);
       }
-      if (savedRecords.length >= 1) {
+      const cachedData = await this.rankingModel.findAll({
+        where: { domain },
+        order: [['checkedAt', 'DESC']],
+      });
+      if (cachedData.length >= 1) {
         return {
           success: true,
-          count: savedRecords.length,
-          records: savedRecords,
+          count: cachedData.length,
+          records: cachedData,
         };
       }
     }
