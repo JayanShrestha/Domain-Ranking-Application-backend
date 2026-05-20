@@ -93,7 +93,7 @@ export class RankingService {
         );
         savedRecords.push(saved);
       }
-      if (savedRecords.length > 1) {
+      if (savedRecords.length >= 1) {
         return {
           success: true,
           count: savedRecords.length,
