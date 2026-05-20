@@ -91,6 +91,7 @@ export class RankingService {
       where: { domain },
       order: [['checkedAt', 'DESC']],
     });
+    console.log('Saved records:', savedRecords);
     return {
       success: true,
       count: savedRecords.length,
@@ -141,6 +142,7 @@ export class RankingService {
         records: savedRecords,
       });
     }
+    console.log('Results:', results);
     return {
       success: true,
       results,
